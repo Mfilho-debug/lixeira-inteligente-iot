@@ -1,0 +1,1062 @@
+{
+  "title": "Lixeira Inteligente - Monitoramento",
+  "uid": "lixeira-inteligente",
+  "tags": [
+    "lixeira",
+    "ods11"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 3,
+  "refresh": "10s",
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "# 🗑️ Lixeira Inteligente · Monitoramento em Tempo Real\nGestão inteligente de resíduos sólidos · **ODS 11 · Meta 11.6** · Universidade Presbiteriana Mackenzie"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "🗑️ Total de lixeiras",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "queryText": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "query": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "✅ Normais (< 60%)",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "queryText": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "query": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "nivel_pct",
+                "config": {
+                  "id": "lower",
+                  "options": {
+                    "value": 60
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "⚠️ Atenção (60% a 84%)",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "queryText": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "query": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "nivel_pct",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 60
+                  }
+                }
+              },
+              {
+                "fieldName": "nivel_pct",
+                "config": {
+                  "id": "lower",
+                  "options": {
+                    "value": 85
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "🚨 Cheias (≥ 85%)",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "queryText": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "query": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "nivel_pct",
+                "config": {
+                  "id": "greaterOrEqual",
+                  "options": {
+                    "value": 85
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "gauge",
+      "title": "🗑️ Lixeira 1",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira01' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "queryText": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira01' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "query": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira01' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "gauge",
+      "title": "🗑️ Lixeira 2",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 4,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira02' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "queryText": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira02' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "query": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira02' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "gauge",
+      "title": "🗑️ Lixeira 3",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 8,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira03' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "queryText": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira03' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "query": "SELECT nivel_pct\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira03' AND nivel_pct IS NOT NULL\nORDER BY time DESC\nLIMIT 1",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "gauge",
+      "title": "📊 Ocupação média",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "mean"
+          ],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "queryText": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "query": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "🏆 Ranking de ocupação",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^nivel_pct$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "queryText": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "query": "SELECT lixeira, nivel_pct\nFROM (\n  SELECT lixeira, nivel_pct, ROW_NUMBER() OVER (PARTITION BY lixeira ORDER BY time DESC) AS rn\n  FROM lixeira\n  WHERE $__timeFilter(time) AND nivel_pct IS NOT NULL\n) t\nWHERE rn = 1\nORDER BY nivel_pct DESC",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "📈 Nível de ocupação ao longo do tempo",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 3,
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lixeira 1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lixeira 2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lixeira 3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT time, nivel_pct AS \"Lixeira 1\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira01' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "queryText": "SELECT time, nivel_pct AS \"Lixeira 1\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira01' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "query": "SELECT time, nivel_pct AS \"Lixeira 1\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira01' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "B",
+          "rawSql": "SELECT time, nivel_pct AS \"Lixeira 2\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira02' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "queryText": "SELECT time, nivel_pct AS \"Lixeira 2\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira02' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "query": "SELECT time, nivel_pct AS \"Lixeira 2\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira02' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "C",
+          "rawSql": "SELECT time, nivel_pct AS \"Lixeira 3\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira03' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "queryText": "SELECT time, nivel_pct AS \"Lixeira 3\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira03' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "query": "SELECT time, nivel_pct AS \"Lixeira 3\"\nFROM lixeira\nWHERE $__timeFilter(time) AND lixeira = 'lixeira03' AND nivel_pct IS NOT NULL\nORDER BY time",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "🔔 Últimas leituras em atenção ou cheias",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Nível (%)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 60
+                    },
+                    {
+                      "color": "red",
+                      "value": 85
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT time AS \"Horário\", lixeira AS \"Lixeira\", nivel_pct AS \"Nível (%)\", status AS \"Status\"\nFROM lixeira\nWHERE $__timeFilter(time) AND nivel_pct >= 60\nORDER BY time DESC\nLIMIT 8",
+          "queryText": "SELECT time AS \"Horário\", lixeira AS \"Lixeira\", nivel_pct AS \"Nível (%)\", status AS \"Status\"\nFROM lixeira\nWHERE $__timeFilter(time) AND nivel_pct >= 60\nORDER BY time DESC\nLIMIT 8",
+          "query": "SELECT time AS \"Horário\", lixeira AS \"Lixeira\", nivel_pct AS \"Nível (%)\", status AS \"Status\"\nFROM lixeira\nWHERE $__timeFilter(time) AND nivel_pct >= 60\nORDER BY time DESC\nLIMIT 8",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "🚪 Usos da lixeira (aberturas de tampa)",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "decimals": 0,
+          "noValue": "Sem dados de presença",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 75,
+            "lineWidth": 1,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT DATE_BIN(INTERVAL '10 minutes', time, TIMESTAMP '1970-01-01T00:00:00Z') AS time, COUNT(*) AS \"Usos\"\nFROM presenca\nWHERE $__timeFilter(time)\nGROUP BY 1\nORDER BY 1",
+          "queryText": "SELECT DATE_BIN(INTERVAL '10 minutes', time, TIMESTAMP '1970-01-01T00:00:00Z') AS time, COUNT(*) AS \"Usos\"\nFROM presenca\nWHERE $__timeFilter(time)\nGROUP BY 1\nORDER BY 1",
+          "query": "SELECT DATE_BIN(INTERVAL '10 minutes', time, TIMESTAMP '1970-01-01T00:00:00Z') AS time, COUNT(*) AS \"Usos\"\nFROM presenca\nWHERE $__timeFilter(time)\nGROUP BY 1\nORDER BY 1",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "piechart",
+      "title": "🍩 Usos por lixeira",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dg4xxo6alz4sgd"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 10,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^usos$/"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dg4xxo6alz4sgd"
+          },
+          "refId": "A",
+          "rawSql": "SELECT lixeira, COUNT(*) AS usos\nFROM presenca\nWHERE $__timeFilter(time)\nGROUP BY lixeira\nORDER BY lixeira",
+          "queryText": "SELECT lixeira, COUNT(*) AS usos\nFROM presenca\nWHERE $__timeFilter(time)\nGROUP BY lixeira\nORDER BY lixeira",
+          "query": "SELECT lixeira, COUNT(*) AS usos\nFROM presenca\nWHERE $__timeFilter(time)\nGROUP BY lixeira\nORDER BY lixeira",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "resultFormat": "table"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "text",
+      "title": "🌍 Contribuição para a Agenda 2030",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### ODS 11 · Cidades e Comunidades Sustentáveis\n**Meta 11.6:** reduzir o impacto ambiental negativo das cidades, com atenção especial à gestão de resíduos municipais.\n\nEste painel mostra **onde** e **quando** a coleta é necessária, evitando transbordamentos e deslocamentos desnecessários.\n\n_Soluções inteligentes para cidades mais limpas._"
+      }
+    }
+  ]
+}

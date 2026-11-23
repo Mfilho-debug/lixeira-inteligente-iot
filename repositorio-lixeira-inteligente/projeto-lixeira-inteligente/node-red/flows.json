@@ -1,0 +1,360 @@
+[
+  {
+    "id": "tab1",
+    "type": "tab",
+    "label": "Lixeira Inteligente",
+    "disabled": false,
+    "info": "Regras de negócio: telemetria -> InfluxDB, alerta Telegram, comando de tampa.",
+    "env": [
+      {
+        "name": "TELEGRAM_CHAT_ID",
+        "value": "SEU_CHAT_ID",
+        "type": "str"
+      }
+    ]
+  },
+  {
+    "id": "broker1",
+    "type": "mqtt-broker",
+    "name": "HiveMQ público",
+    "broker": "broker.hivemq.com",
+    "port": "1883",
+    "clientid": "nodered-upm-lixeira-01",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "closeTopic": "",
+    "willTopic": ""
+  },
+  {
+    "id": "influxcfg",
+    "type": "influxdb",
+    "hostname": "127.0.0.1",
+    "port": "8086",
+    "protocol": "http",
+    "database": "database",
+    "name": "InfluxDB Cloud",
+    "usetls": true,
+    "tls": "",
+    "influxdbVersion": "2.0",
+    "url": "https://SEU-HOST.influxdata.com",
+    "timeout": "10",
+    "rejectUnauthorized": true
+  },
+  {
+    "id": "tgbot",
+    "type": "telegram bot",
+    "botname": "lixeira_upm_bot",
+    "usernames": "",
+    "chatids": "",
+    "baseapiurl": "",
+    "testenvironment": false,
+    "updatemode": "polling",
+    "pollinterval": "300",
+    "usesocks": false,
+    "sockshost": "",
+    "socksprotocol": "socks5",
+    "socksport": "6667",
+    "socksusername": "anonymous",
+    "sockspassword": "",
+    "bothost": "",
+    "botpath": "",
+    "localbotport": "8443",
+    "publicbotport": "8443",
+    "privatekey": "",
+    "certificate": "",
+    "useselfsignedcertificate": false,
+    "sslterminated": false,
+    "verboselogging": false
+  },
+  {
+    "id": "c1",
+    "type": "comment",
+    "z": "tab1",
+    "name": "1) Telemetria: MQTT -> classificação -> InfluxDB + alerta Telegram",
+    "info": "",
+    "x": 300,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "in_tel",
+    "type": "mqtt in",
+    "z": "tab1",
+    "name": "telemetria (todas as lixeiras)",
+    "topic": "upm/ioc/lixeira/+/telemetria",
+    "qos": "0",
+    "datatype": "json",
+    "broker": "broker1",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 100,
+    "wires": [
+      [
+        "fn_tel",
+        "dbg"
+      ]
+    ]
+  },
+  {
+    "id": "fn_tel",
+    "type": "function",
+    "z": "tab1",
+    "name": "Processar telemetria",
+    "func": "// Processa a telemetria de cada lixeira: classifica o nível, grava no banco e decide se envia alerta.\nconst LIMITE_CHEIA = 85, LIMITE_ATENCAO = 60, LIMITE_REARME = 60;\nconst t = msg.payload || {};\nconst partes = msg.topic.split('/');\nconst id = t.id || partes[partes.length - 2];\nconst nivel = (t.nivel_pct === null || t.nivel_pct === undefined) ? null : Number(t.nivel_pct);\n\nlet status = 'sem_leitura';\nif (nivel !== null && !isNaN(nivel)) {\n    status = nivel >= LIMITE_CHEIA ? 'cheia' : (nivel >= LIMITE_ATENCAO ? 'atencao' : 'normal');\n}\nconst cod = { normal: 0, atencao: 1, cheia: 2, sem_leitura: -1 };\n\nconst campos = { status: status, status_cod: cod[status], tampa_aberta: t.tampa === 'aberta' ? 1 : 0 };\nif (nivel !== null && !isNaN(nivel)) campos.nivel_pct = nivel;\nif (typeof t.distancia_cm === 'number') campos.distancia_cm = t.distancia_cm;\nif (typeof t.rssi === 'number') campos.rssi = t.rssi;\n\n// guarda o último nível conhecido para a regra de abertura da tampa\nconst niveis = flow.get('niveis') || {};\nniveis[id] = nivel;\nflow.set('niveis', niveis);\n\nconst ponto = [{ measurement: 'lixeira', tags: { lixeira: id }, fields: campos }];\n\n// alerta uma única vez por ciclo de enchimento (histerese: rearma quando o nível cair abaixo de 60%)\nconst alertado = flow.get('alertado') || {};\nlet alerta = null;\nif (nivel !== null && nivel >= LIMITE_CHEIA && !alertado[id]) {\n    alertado[id] = true;\n    alerta = { payload: {\n        chatId: env.get('TELEGRAM_CHAT_ID'),\n        type: 'message',\n        content: '🚨 ' + id + ' está cheia (' + nivel.toFixed(0) + '%). Coleta necessária.'\n    } };\n} else if (nivel !== null && nivel < LIMITE_REARME && alertado[id]) {\n    alertado[id] = false;\n}\nflow.set('alertado', alertado);\n\nreturn [{ payload: ponto }, alerta];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 420,
+    "y": 100,
+    "wires": [
+      [
+        "influx_tel"
+      ],
+      [
+        "tg_send"
+      ]
+    ]
+  },
+  {
+    "id": "influx_tel",
+    "type": "influxdb batch",
+    "z": "tab1",
+    "influxdb": "influxcfg",
+    "precision": "",
+    "retentionPolicy": "",
+    "name": "InfluxDB (telemetria)",
+    "database": "database",
+    "precisionV18FluxV20": "ms",
+    "retentionPolicyV18Flux": "",
+    "org": "SUA_ORG",
+    "bucket": "lixeiras",
+    "x": 680,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "tg_send",
+    "type": "telegram sender",
+    "z": "tab1",
+    "name": "Alerta Telegram",
+    "bot": "tgbot",
+    "haserroroutput": false,
+    "outputs": 1,
+    "x": 680,
+    "y": 140,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c2",
+    "type": "comment",
+    "z": "tab1",
+    "name": "2) Presença: regra de abertura da tampa (atuador)",
+    "info": "",
+    "x": 280,
+    "y": 220,
+    "wires": []
+  },
+  {
+    "id": "in_pres",
+    "type": "mqtt in",
+    "z": "tab1",
+    "name": "presença",
+    "topic": "upm/ioc/lixeira/+/presenca",
+    "qos": "0",
+    "datatype": "json",
+    "broker": "broker1",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 130,
+    "y": 280,
+    "wires": [
+      [
+        "fn_pres"
+      ]
+    ]
+  },
+  {
+    "id": "fn_pres",
+    "type": "function",
+    "z": "tab1",
+    "name": "Regra de abertura",
+    "func": "// Regra de abertura da tampa: abre quando há presença, exceto se a lixeira estiver praticamente lotada (>= 95%).\nconst LIMITE_BLOQUEIO = 95;\nconst p = msg.payload || {};\nconst partes = msg.topic.split('/');\nconst id = p.id || partes[partes.length - 2];\nconst niveis = flow.get('niveis') || {};\nconst nivel = niveis[id];\n\nconst bloqueada = (typeof nivel === 'number') && nivel >= LIMITE_BLOQUEIO;\nconst comando = bloqueada ? null : { topic: 'upm/ioc/lixeira/' + id + '/cmd/tampa', payload: 'abrir', qos: 0, retain: false };\nconst registro = { payload: [{\n    measurement: 'presenca',\n    tags: { lixeira: id },\n    fields: { detectada: 1, tampa_bloqueada: bloqueada ? 1 : 0 }\n}] };\nreturn [comando, registro];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 350,
+    "y": 280,
+    "wires": [
+      [
+        "out_cmd"
+      ],
+      [
+        "influx_pres"
+      ]
+    ]
+  },
+  {
+    "id": "out_cmd",
+    "type": "mqtt out",
+    "z": "tab1",
+    "name": "comando da tampa",
+    "topic": "",
+    "qos": "0",
+    "retain": "false",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "broker1",
+    "x": 610,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "influx_pres",
+    "type": "influxdb batch",
+    "z": "tab1",
+    "influxdb": "influxcfg",
+    "precision": "",
+    "retentionPolicy": "",
+    "name": "InfluxDB (presença)",
+    "database": "database",
+    "precisionV18FluxV20": "ms",
+    "retentionPolicyV18Flux": "",
+    "org": "SUA_ORG",
+    "bucket": "lixeiras",
+    "x": 620,
+    "y": 320,
+    "wires": []
+  },
+  {
+    "id": "c3",
+    "type": "comment",
+    "z": "tab1",
+    "name": "3) Disponibilidade (Last Will) e teste",
+    "info": "",
+    "x": 230,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "in_st",
+    "type": "mqtt in",
+    "z": "tab1",
+    "name": "status",
+    "topic": "upm/ioc/lixeira/+/status",
+    "qos": "1",
+    "datatype": "auto-detect",
+    "broker": "broker1",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 120,
+    "y": 460,
+    "wires": [
+      [
+        "fn_off"
+      ]
+    ]
+  },
+  {
+    "id": "fn_off",
+    "type": "function",
+    "z": "tab1",
+    "name": "Detectar offline",
+    "func": "// Avisa a equipe quando uma lixeira fica offline (Last Will do MQTT)\nconst partes = msg.topic.split('/');\nconst id = partes[partes.length - 2];\nconst estado = String(msg.payload).trim();\nif (estado !== 'offline') return null;\nreturn { payload: { chatId: env.get('TELEGRAM_CHAT_ID'), type: 'message', content: '⚠️ ' + id + ' ficou offline.' } };",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 340,
+    "y": 460,
+    "wires": [
+      [
+        "tg_send"
+      ]
+    ]
+  },
+  {
+    "id": "inj",
+    "type": "inject",
+    "z": "tab1",
+    "name": "Teste: lixeira cheia",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 540,
+    "wires": [
+      [
+        "fn_test"
+      ]
+    ]
+  },
+  {
+    "id": "fn_test",
+    "type": "function",
+    "z": "tab1",
+    "name": "Telemetria de teste",
+    "func": "// Gera telemetria de teste para validar alerta e gravação sem depender do Wokwi\nreturn { topic: 'upm/ioc/lixeira/lixeira_teste/telemetria', payload: { id: 'lixeira_teste', distancia_cm: 8, nivel_pct: 93.3, sensor_ok: true, tampa: 'fechada', rssi: -55 } };",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 350,
+    "y": 540,
+    "wires": [
+      [
+        "fn_tel"
+      ]
+    ]
+  },
+  {
+    "id": "dbg",
+    "type": "debug",
+    "z": "tab1",
+    "name": "debug telemetria",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 440,
+    "y": 160,
+    "wires": []
+  }
+]
