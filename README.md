@@ -4,7 +4,7 @@ Protótipo de Internet das Coisas (IoT) para monitorar o nível de ocupação de
 
 Projeto da disciplina **Objetos Inteligentes Conectados** — Universidade Presbiteriana Mackenzie.
 
-- **Vídeo de demonstração:** [inserir link do YouTube]
+- **Vídeo de demonstração:**https://youtu.be/b9cXbZGETeo
 - **Integrantes:** Gabriel Freitas, Lucas Ricci, Melissa Zanelato Lupinacci e Moisés Manoel Santos
 - **Agenda 2030 da ONU:** ODS 11 (Cidades e Comunidades Sustentáveis), meta 11.6, que trata de reduzir o impacto ambiental negativo das cidades, com atenção especial à gestão de resíduos municipais.
 
